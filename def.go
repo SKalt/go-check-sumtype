@@ -10,7 +10,7 @@ import (
 
 var debug = flag.Bool("debug", false, "enable debug logging")
 
-func debugf(format string, args ...interface{}) {
+func debugf(format string, args ...any) {
 	if *debug {
 		log.Printf(format, args...)
 	}
@@ -104,8 +104,8 @@ func newSumTypeDef(pkg *types.Package, decl sumTypeDecl) (*sumTypeDef, error) {
 		return nil, notInterfaceError{decl}
 	}
 	hasUnexported := false
-	for i := range iface.NumMethods() {
-		if !iface.Method(i).Exported() {
+	for method := range iface.Methods() {
+		if !method.Exported() {
 			hasUnexported = true
 			break
 		}
