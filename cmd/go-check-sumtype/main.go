@@ -1,7 +1,7 @@
 package main
 
 import (
-	gochecksumtype "github.com/alecthomas/go-check-sumtype"
+	gochecksumtype "github.com/skalt/go-check-sumtype"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
