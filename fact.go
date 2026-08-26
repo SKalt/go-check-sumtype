@@ -1,6 +1,10 @@
 package gochecksumtype
 
-import "fmt"
+import (
+	"fmt"
+
+	"golang.org/x/tools/go/analysis"
+)
 
 // sumTypeFact is a package-level fact that declares a sum type and its variants.
 // It is exported by a package that contains a //sumtype:decl annotation and
@@ -10,6 +14,9 @@ type sumTypeFact struct {
 	Variants []string // names of concrete types implementing the interface
 }
 
+var _ analysis.Fact = (*sumTypeFact)(nil)
+
+// AFact implements [analysis.Fact].
 func (*sumTypeFact) AFact() {}
 
 func (f *sumTypeFact) String() string {

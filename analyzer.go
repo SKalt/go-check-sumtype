@@ -1,31 +1,25 @@
 package gochecksumtype
 
 import (
-	"flag"
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
 )
 
-// Analyzer is an analysis.Analyzer that checks exhaustiveness of sum type
+// checks exhaustiveness of sum type
 // switch statements. Sum types are declared with a //sumtype:decl comment
 // above a sealed interface type.
-var Analyzer = &analysis.Analyzer{
-	Name:  "sumtype",
-	Doc:   "check exhaustiveness of sum type switch statements",
-	Flags: flags,
-	Run:   run,
-	FactTypes: []analysis.Fact{new(sumTypeFact)},
+func newAnalyzer() *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name:      "sumtype",
+		Doc:       "check exhaustiveness of sum type switch statements",
+		Run:       run,
+		Flags:     newFlags(),
+		FactTypes: []analysis.Fact{new(sumTypeFact)},
+	}
 }
 
-var flags = func() flag.FlagSet {
-	var fs flag.FlagSet
-	fs.Bool("default-signifies-exhaustive", true,
-		"Presence of a non-panicking default case satisfies exhaustiveness.")
-	fs.Bool("include-shared-interfaces", false,
-		"Include shared interfaces in the exhaustiveness check.")
-	return fs
-}()
+var Analyzer = newAnalyzer()
 
 func run(pass *analysis.Pass) (any, error) {
 	decls, err := findSumTypeDecls(pass.Files, pass.Fset)
@@ -61,13 +55,7 @@ func run(pass *analysis.Pass) (any, error) {
 		}
 	}
 
-	defaultSignifiesExhaustive, _ := pass.Analyzer.Flags.Lookup("default-signifies-exhaustive").Value.(flag.Getter)
-	includeSharedInterfaces, _ := pass.Analyzer.Flags.Lookup("include-shared-interfaces").Value.(flag.Getter)
-
-	cfg := config{
-		DefaultSignifiesExhaustive: defaultSignifiesExhaustive != nil && defaultSignifiesExhaustive.Get().(bool),
-		IncludeSharedInterfaces:    includeSharedInterfaces != nil && includeSharedInterfaces.Get().(bool),
-	}
+	cfg := cfgFromFlags(pass.Analyzer.Flags)
 
 	// Check exhaustiveness for all type switches in this package.
 	for _, astfile := range pass.Files {
@@ -79,7 +67,7 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-// factToTypeDef reconstructs a sumTypeDef from an imported fact.
+// factToTypeDef reconstructs a [sumTypeDef] from an imported fact.
 func factToTypeDef(pass *analysis.Pass, pkg *types.Package, fact *sumTypeFact) *sumTypeDef {
 	obj := pkg.Scope().Lookup(fact.TypeName)
 	if obj == nil {

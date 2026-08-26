@@ -40,7 +40,7 @@ func (e inexhaustiveError) Names() []string {
 // checkFile does exhaustiveness checking for the given sum type definitions
 // in a single AST file. Every instance of inexhaustive case analysis is
 // returned.
-func checkFile(pass *analysis.Pass, astfile *ast.File, defs []sumTypeDef, cfg config) []error {
+func checkFile(pass *analysis.Pass, astfile *ast.File, defs []sumTypeDef, cfg cfg) []error {
 	var errs []error
 	ast.Inspect(astfile, func(n ast.Node) bool {
 		swtch, ok := n.(*ast.TypeSwitchStmt)
@@ -60,13 +60,13 @@ func checkFile(pass *analysis.Pass, astfile *ast.File, defs []sumTypeDef, cfg co
 // all variants of that sum type, then an error is returned indicating which
 // variants were missed.
 //
-// Note that if the type switch contains a non-panicing default case, then
+// Note that if the type switch contains a non-panicking default case, then
 // exhaustiveness checks are disabled.
 func checkSwitch(
 	pass *analysis.Pass,
 	defs []sumTypeDef,
 	swtch *ast.TypeSwitchStmt,
-	cfg config,
+	cfg cfg,
 ) error {
 	def, missing := missingVariantsInSwitch(pass, defs, swtch, cfg)
 	if len(missing) > 0 {
@@ -87,7 +87,7 @@ func missingVariantsInSwitch(
 	pass *analysis.Pass,
 	defs []sumTypeDef,
 	swtch *ast.TypeSwitchStmt,
-	cfg config,
+	cfg cfg,
 ) (*sumTypeDef, []types.Object) {
 	asserted := findTypeAssertExpr(swtch)
 	ty := pass.TypesInfo.TypeOf(asserted)
@@ -100,14 +100,14 @@ func missingVariantsInSwitch(
 		return nil, nil
 	}
 	variantExprs, hasDefault := switchVariants(swtch)
-	if cfg.DefaultSignifiesExhaustive && hasDefault && !defaultClauseAlwaysPanics(swtch) {
+	if cfg.defaultSignifiesExhaustive() && hasDefault && !defaultClauseAlwaysPanics(swtch) {
 		return def, nil
 	}
 	variantTypes := make([]types.Type, 0, len(variantExprs))
 	for _, expr := range variantExprs {
 		variantTypes = append(variantTypes, pass.TypesInfo.TypeOf(expr))
 	}
-	return def, def.missing(variantTypes, cfg.IncludeSharedInterfaces)
+	return def, def.missing(variantTypes, cfg.includeSharedInterfaces())
 }
 
 // switchVariants returns all case expressions found in a type switch. This

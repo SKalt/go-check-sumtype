@@ -15,7 +15,7 @@ type B struct{}
 func (b *B) sealed() {}
 
 func main() {
-	switch T(nil).(type) {
+	switch T(nil).(type) { // want: `exhaustiveness check failed for sum type "T" .*missing cases for B`
 	case *A:
 	default:
 		fmt.Println("legit catch all goes here")

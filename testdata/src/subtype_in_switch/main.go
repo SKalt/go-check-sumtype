@@ -1,5 +1,5 @@
 // want package:`.*sumTypeFact\{T1 \[A B C T2\]\}.*`
-package shared_interface
+package subtype_in_switch
 
 //sumtype:decl
 type T1 interface{ sealed1() }
