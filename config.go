@@ -22,10 +22,10 @@ func (c cfg) includeSharedInterfaces() bool {
 
 func cfgFromFlags(flags flag.FlagSet) (result cfg) {
 	if getBoolFlag(flags, flagDefaultSignifiesExhaustive) {
-		result = result | defaultExhaustive
+		result |= defaultExhaustive
 	}
 	if getBoolFlag(flags, flagIncludeSharedInterfaces) {
-		result = result | includeSharedInterfaces
+		result |= includeSharedInterfaces
 	}
 	return result
 }

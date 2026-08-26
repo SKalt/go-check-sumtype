@@ -69,7 +69,8 @@ func TestExpectFindings(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			analyzer := newAnalyzer()
-			if err := tc.cfg.setFlags(&analyzer.Flags); err != nil {
+			err := tc.cfg.setFlags(&analyzer.Flags)
+			if err != nil {
 				t.Fatal(err)
 			}
 			t.Log(cfgFromFlags(analyzer.Flags).String())

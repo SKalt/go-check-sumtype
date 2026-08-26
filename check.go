@@ -40,14 +40,14 @@ func (e inexhaustiveError) Names() []string {
 // checkFile does exhaustiveness checking for the given sum type definitions
 // in a single AST file. Every instance of inexhaustive case analysis is
 // returned.
-func checkFile(pass *analysis.Pass, astfile *ast.File, defs []sumTypeDef, cfg cfg) []error {
-	var errs []error
+func checkFile(pass *analysis.Pass, astfile *ast.File, defs []sumTypeDef, cfg cfg) (errs []error) {
 	ast.Inspect(astfile, func(n ast.Node) bool {
 		swtch, ok := n.(*ast.TypeSwitchStmt)
 		if !ok {
 			return true
 		}
-		if err := checkSwitch(pass, defs, swtch, cfg); err != nil {
+		err := checkSwitch(pass, defs, swtch, cfg)
+		if err != nil {
 			errs = append(errs, err)
 		}
 		return true

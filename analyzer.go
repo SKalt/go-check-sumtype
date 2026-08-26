@@ -1,6 +1,7 @@
 package gochecksumtype
 
 import (
+	"go/token"
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
@@ -19,13 +20,14 @@ func newAnalyzer() *analysis.Analyzer {
 		URL:              "",
 		RunDespiteErrors: false,
 		Requires:         nil,
+		ResultType:       nil,
 	}
 }
 
 var Analyzer = newAnalyzer()
 
 func run(pass *analysis.Pass) (any, error) {
-	decls, err := findSumTypeDecls(pass.Files, pass.Fset)
+	decls, err := findSumTypeDecls(pass.Files)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +54,7 @@ func run(pass *analysis.Pass) (any, error) {
 	for _, pkg := range pass.Pkg.Imports() {
 		var fact sumTypeFact
 		if pass.ImportPackageFact(pkg, &fact) {
-			if def := factToTypeDef(pass, pkg, &fact); def != nil {
+			if def := factToTypeDef(pkg, &fact); def != nil {
 				defs = append(defs, *def)
 			}
 		}
@@ -62,8 +64,8 @@ func run(pass *analysis.Pass) (any, error) {
 
 	// Check exhaustiveness for all type switches in this package.
 	for _, astfile := range pass.Files {
-		for _, errs := range checkFile(pass, astfile, defs, cfg) {
-			pass.Reportf(errs.(Error).Pos(), "%s", errs.Error())
+		for _, err := range checkFile(pass, astfile, defs, cfg) {
+			pass.Reportf(err.(Error).Pos(), "%s", err.Error())
 		}
 	}
 
@@ -71,7 +73,7 @@ func run(pass *analysis.Pass) (any, error) {
 }
 
 // factToTypeDef reconstructs a [sumTypeDef] from an imported fact.
-func factToTypeDef(pass *analysis.Pass, pkg *types.Package, fact *sumTypeFact) *sumTypeDef {
+func factToTypeDef(pkg *types.Package, fact *sumTypeFact) *sumTypeDef {
 	obj := pkg.Scope().Lookup(fact.TypeName)
 	if obj == nil {
 		return nil
@@ -81,8 +83,9 @@ func factToTypeDef(pass *analysis.Pass, pkg *types.Package, fact *sumTypeFact) *
 		return nil
 	}
 	def := &sumTypeDef{
-		Decl: sumTypeDecl{TypeName: fact.TypeName},
-		Ty:   iface,
+		Decl:     sumTypeDecl{TypeName: fact.TypeName, Pos: token.NoPos},
+		Ty:       iface,
+		Variants: make([]types.Object, 0, len(fact.Variants)),
 	}
 	for _, name := range fact.Variants {
 		vObj := pkg.Scope().Lookup(name)

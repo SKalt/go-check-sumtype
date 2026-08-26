@@ -73,7 +73,7 @@ type sumTypeDef struct {
 // any of the given declarations, then an error is returned.
 func findSumTypeDefs(pass *analysis.Pass, decls []sumTypeDecl) ([]sumTypeDef, []error) {
 	defs := make([]sumTypeDef, 0, len(decls))
-	var errs []error
+	errs := make([]error, 0, len(decls))
 	for _, decl := range decls {
 		def, err := newSumTypeDef(pass, decl)
 		if err != nil {
@@ -115,12 +115,14 @@ func newSumTypeDef(pass *analysis.Pass, decl sumTypeDecl) (*sumTypeDef, error) {
 	if !hasUnexported {
 		return nil, unsealedError{decl}
 	}
+	names := pkg.Scope().Names()
 	def := &sumTypeDef{
-		Decl: decl,
-		Ty:   iface,
+		Decl:     decl,
+		Ty:       iface,
+		Variants: make([]types.Object, 0, len(names)),
 	}
 	debugf("searching for variants of %s.%s\n", pkg.Path(), decl.TypeName)
-	for _, name := range pkg.Scope().Names() {
+	for _, name := range names {
 		obj, ok := pkg.Scope().Lookup(name).(*types.TypeName)
 		if !ok {
 			continue

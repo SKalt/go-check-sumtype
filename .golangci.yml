@@ -18,7 +18,9 @@ linters:
     - gocognit
     - goconst
     - gocyclo
+    - godoclint
     - godot
+    - gomodguard
     - godox
     - govet
     - ireturn
@@ -41,6 +43,7 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl
+    - wsl_v5
   settings:
     dupl:
       threshold: 100
