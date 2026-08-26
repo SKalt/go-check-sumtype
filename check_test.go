@@ -15,6 +15,7 @@ func (c cfg) setFlags(fs *flag.FlagSet) error {
 		fs.Set(flagIncludeSharedInterfaces, fmt.Sprint(c.includeSharedInterfaces())),
 	)
 }
+
 func (c cfg) String() string {
 	return fmt.Sprintf("%s:%t %s:%t",
 		flagDefaultSignifiesExhaustive, c.defaultSignifiesExhaustive(),
@@ -49,7 +50,7 @@ func TestExpectFindings(t *testing.T) {
 		{name: "default_exhaustive", cfg: defaultExhaustive},
 		// tests that even if we have a missing variant, a default
 		// case should thwart exhaustiveness checking when [cfg.defaultSignifiesExhaustive] is false.
-		{name: "not default exhaustive", cfg: 0},
+		{name: "not_default_exhaustive", cfg: 0},
 		// tests that we report an error if one tries to declare a sum
 		// type with an unsealed interface. See ./testdata/src/not_sealed/main.go
 		{name: "not_sealed", cfg: defaultExhaustive},

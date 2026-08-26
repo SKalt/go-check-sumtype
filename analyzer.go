@@ -11,11 +11,14 @@ import (
 // above a sealed interface type.
 func newAnalyzer() *analysis.Analyzer {
 	return &analysis.Analyzer{
-		Name:      "sumtype",
-		Doc:       "check exhaustiveness of sum type switch statements",
-		Run:       run,
-		Flags:     newFlags(),
-		FactTypes: []analysis.Fact{new(sumTypeFact)},
+		Name:             "sumtype",
+		Doc:              "check exhaustiveness of sum type switch statements",
+		Run:              run,
+		Flags:            newFlags(),
+		FactTypes:        []analysis.Fact{new(sumTypeFact)},
+		URL:              "",
+		RunDespiteErrors: false,
+		Requires:         nil,
 	}
 }
 

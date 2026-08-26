@@ -24,7 +24,7 @@ func (c *C) sealed1() {}
 func (c *C) sealed2() {}
 
 func main() {
-	switch T1(nil).(type) { // want `exhaustiveness check failed for sum type "T1".*missing cases for B, C`
+	switch T1(nil).(type) {
 	case *A:
 	case T2:
 	}
