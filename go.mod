@@ -1,4 +1,4 @@
-module github.com/alecthomas/go-check-sumtype
+module github.com/skalt/go-check-sumtype
 
 go 1.27.0
 
