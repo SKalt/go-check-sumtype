@@ -66,7 +66,7 @@ func TestExpectFindings(t *testing.T) {
 		// covers all leaves of the sum type, even if any SubTypes are not explicitly covered
 		// see ./testdata/src/all_leaves/main.go
 		{name: "all_leaves", cfg: defaultExhaustive},
-
+		// tests that `_test.go` files are covered.
 		{name: "with_tests", cfg: defaultExhaustive},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
