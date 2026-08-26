@@ -46,7 +46,6 @@ func findSumTypeDecls(files []*ast.File) ([]sumTypeDecl, error) {
 				}
 				pos := tspec.Pos()
 				decl := sumTypeDecl{TypeName: tspec.Name.Name, Pos: pos}
-				debugf("found sum type decl: %s", decl.TypeName)
 				decls = append(decls, decl)
 				break
 			}

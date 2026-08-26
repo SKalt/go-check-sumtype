@@ -27,6 +27,8 @@ func newAnalyzer() *analysis.Analyzer {
 var Analyzer = newAnalyzer()
 
 func run(pass *analysis.Pass) (any, error) {
+	cfg := cfgFromFlags(pass.Analyzer.Flags)
+
 	decls, err := findSumTypeDecls(pass.Files)
 	if err != nil {
 		return nil, err
@@ -59,9 +61,6 @@ func run(pass *analysis.Pass) (any, error) {
 			}
 		}
 	}
-
-	cfg := cfgFromFlags(pass.Analyzer.Flags)
-
 	// Check exhaustiveness for all type switches in this package.
 	for _, astfile := range pass.Files {
 		for _, err := range checkFile(pass, astfile, defs, cfg) {

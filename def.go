@@ -4,18 +4,9 @@ import (
 	"fmt"
 	"go/token"
 	"go/types"
-	"log"
 
 	"golang.org/x/tools/go/analysis"
 )
-
-var debugEnabled = false
-
-func debugf(format string, args ...any) {
-	if debugEnabled {
-		log.Printf(format, args...)
-	}
-}
 
 // Error as returned by the analyzer
 type Error interface {
@@ -121,7 +112,6 @@ func newSumTypeDef(pass *analysis.Pass, decl sumTypeDecl) (*sumTypeDef, error) {
 		Ty:       iface,
 		Variants: make([]types.Object, 0, len(names)),
 	}
-	debugf("searching for variants of %s.%s\n", pkg.Path(), decl.TypeName)
 	for _, name := range names {
 		obj, ok := pkg.Scope().Lookup(name).(*types.TypeName)
 		if !ok {
@@ -136,7 +126,6 @@ func newSumTypeDef(pass *analysis.Pass, decl sumTypeDecl) (*sumTypeDef, error) {
 			continue
 		}
 		if types.Implements(ty, iface) || types.Implements(types.NewPointer(ty), iface) {
-			debugf("  found variant: %s.%s\n", pkg.Path(), obj.Name())
 			def.Variants = append(def.Variants, obj)
 		}
 	}
