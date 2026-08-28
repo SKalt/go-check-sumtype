@@ -22,8 +22,8 @@ type inexhaustiveError struct {
 func (e inexhaustiveError) Pos() token.Pos { return e.Position }
 func (e inexhaustiveError) Error() string {
 	return fmt.Sprintf(
-		"exhaustiveness check failed for sum type %q (from %v): missing cases for %s",
-		e.Def.Decl.TypeName, e.Def.Decl.Pos, strings.Join(e.Names(), ", "))
+		"exhaustiveness check failed for sum type %q (from %s): missing cases for %s",
+		e.Def.Decl.TypeName, e.Def.Decl.Location, strings.Join(e.Names(), ", "))
 }
 
 // Names returns a sorted list of names corresponding to the missing variant

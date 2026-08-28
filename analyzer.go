@@ -29,7 +29,7 @@ var Analyzer = newAnalyzer()
 func run(pass *analysis.Pass) (any, error) {
 	cfg := cfgFromFlags(pass.Analyzer.Flags)
 
-	decls, err := findSumTypeDecls(pass.Files)
+	decls, err := findSumTypeDecls(pass.Fset, pass.Files)
 	if err != nil {
 		return nil, err
 	}
@@ -41,24 +41,26 @@ func run(pass *analysis.Pass) (any, error) {
 
 	// Export facts so downstream packages can check exhaustiveness
 	// against sum types defined here.
+	fact := &sumTypeFact{Definitions: make([]sumTypeDefinitionFact, 0, len(defs))}
 	for _, def := range defs {
 		variantNames := make([]string, len(def.Variants))
 		for i, v := range def.Variants {
 			variantNames[i] = v.Name()
 		}
-		pass.ExportPackageFact(&sumTypeFact{
+		fact.Definitions = append(fact.Definitions, sumTypeDefinitionFact{
 			TypeName: def.Decl.TypeName,
 			Variants: variantNames,
 		})
+	}
+	if len(fact.Definitions) > 0 {
+		pass.ExportPackageFact(fact)
 	}
 
 	// Import sum type facts from dependencies.
 	for _, pkg := range pass.Pkg.Imports() {
 		var fact sumTypeFact
 		if pass.ImportPackageFact(pkg, &fact) {
-			if def := factToTypeDef(pkg, &fact); def != nil {
-				defs = append(defs, *def)
-			}
+			defs = append(defs, factToTypeDefs(pass.Fset, pkg, &fact)...)
 		}
 	}
 	// Check exhaustiveness for all type switches in this package.
@@ -71,26 +73,38 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-// factToTypeDef reconstructs a [sumTypeDef] from an imported fact.
-func factToTypeDef(pkg *types.Package, fact *sumTypeFact) *sumTypeDef {
-	obj := pkg.Scope().Lookup(fact.TypeName)
-	if obj == nil {
-		return nil
-	}
-	iface, ok := obj.Type().Underlying().(*types.Interface)
-	if !ok {
-		return nil
-	}
-	def := &sumTypeDef{
-		Decl:     sumTypeDecl{TypeName: fact.TypeName, Pos: token.NoPos},
-		Ty:       iface,
-		Variants: make([]types.Object, 0, len(fact.Variants)),
-	}
-	for _, name := range fact.Variants {
-		vObj := pkg.Scope().Lookup(name)
-		if vObj != nil {
-			def.Variants = append(def.Variants, vObj)
+// factToTypeDefs reconstructs [sumTypeDef] values from an imported fact.
+func factToTypeDefs(fset *token.FileSet, pkg *types.Package, fact *sumTypeFact) []sumTypeDef {
+	defs := make([]sumTypeDef, 0, len(fact.Definitions))
+	for _, definition := range fact.Definitions {
+		obj := pkg.Scope().Lookup(definition.TypeName)
+		if obj == nil {
+			continue
 		}
+		iface, ok := obj.Type().Underlying().(*types.Interface)
+		if !ok {
+			continue
+		}
+		location := pkg.Path() + "." + definition.TypeName
+		if position := fset.Position(obj.Pos()); position.IsValid() {
+			location = position.String()
+		}
+		def := sumTypeDef{
+			Decl: sumTypeDecl{
+				TypeName: definition.TypeName,
+				Pos:      token.NoPos,
+				Location: location,
+			},
+			Ty:       iface,
+			Variants: make([]types.Object, 0, len(definition.Variants)),
+		}
+		for _, name := range definition.Variants {
+			vObj := pkg.Scope().Lookup(name)
+			if vObj != nil {
+				def.Variants = append(def.Variants, vObj)
+			}
+		}
+		defs = append(defs, def)
 	}
-	return def
+	return defs
 }

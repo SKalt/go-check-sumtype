@@ -12,11 +12,13 @@ type sumTypeDecl struct {
 	TypeName string
 	// Position where the declaration was found.
 	Pos token.Pos
+	// Human-readable location of the declaration.
+	Location string
 }
 
 // findSumTypeDecls searches the given AST files for sum type declarations of
 // the form `//sumtype:decl`.
-func findSumTypeDecls(files []*ast.File) ([]sumTypeDecl, error) {
+func findSumTypeDecls(fset *token.FileSet, files []*ast.File) ([]sumTypeDecl, error) {
 	var decls []sumTypeDecl
 	var retErr error
 	for _, file := range files {
@@ -41,11 +43,19 @@ func findSumTypeDecls(files []*ast.File) ([]sumTypeDecl, error) {
 					continue
 				}
 				if tspec == nil {
-					retErr = notFoundError{Decl: sumTypeDecl{Pos: decl.Pos(), TypeName: ""}}
+					retErr = notFoundError{Decl: sumTypeDecl{
+						TypeName: "",
+						Pos:      decl.Pos(),
+						Location: fset.Position(decl.Pos()).String(),
+					}}
 					return false
 				}
 				pos := tspec.Pos()
-				decl := sumTypeDecl{TypeName: tspec.Name.Name, Pos: pos}
+				decl := sumTypeDecl{
+					TypeName: tspec.Name.Name,
+					Pos:      pos,
+					Location: fset.Position(pos).String(),
+				}
 				decls = append(decls, decl)
 				break
 			}

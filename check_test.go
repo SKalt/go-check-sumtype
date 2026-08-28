@@ -68,6 +68,10 @@ func TestExpectFindings(t *testing.T) {
 		{name: "all_leaves", cfg: defaultExhaustive},
 		// tests that `_test.go` files are covered.
 		{name: "with_tests", cfg: defaultExhaustive},
+		// tests that aliases are not counted as additional variants.
+		{name: "with_alias", cfg: defaultExhaustive},
+		// tests that all sum types declared in an imported package are checked.
+		{name: "multiple_sumtypes_user", cfg: defaultExhaustive},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			analyzer := newAnalyzer()

@@ -117,12 +117,15 @@ func newSumTypeDef(pass *analysis.Pass, decl sumTypeDecl) (*sumTypeDef, error) {
 		if !ok {
 			continue
 		}
-		ty := obj.Type()
+		ty, ok := obj.Type().(*types.Named)
+		if !ok {
+			continue
+		}
 		if types.Identical(ty.Underlying(), iface) {
 			continue
 		}
 		// Skip generic types.
-		if named, ok := ty.(*types.Named); ok && named.TypeParams() != nil {
+		if ty.TypeParams() != nil {
 			continue
 		}
 		if types.Implements(ty, iface) || types.Implements(types.NewPointer(ty), iface) {

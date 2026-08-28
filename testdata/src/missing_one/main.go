@@ -13,7 +13,7 @@ type B struct{}
 func (b *B) sealed() {}
 
 func main() {
-	switch T(nil).(type) { // want `exhaustiveness check failed for sum type "T" .*missing cases for B`
+	switch T(nil).(type) { // want `exhaustiveness check failed for sum type "T" \(from .*main.go:5:6\): missing cases for B`
 	case *A:
 	}
 }
